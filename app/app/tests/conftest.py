@@ -2,6 +2,7 @@ import os
 import django
 from django.conf import settings
 from django.contrib.auth import get_user_model
+# from rest_framework.test import APIClient
 import pytest
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'app.settings')
@@ -39,3 +40,10 @@ def admin_user(new_user):
         password=new_user["password"]
     )
     return user
+
+
+# @pytest.fixture
+# def api_client():
+#     os.environ.get('DJANGO_SETTINGS_MODULE')
+#     skip_if_no_django()
+#     return APIClient()
