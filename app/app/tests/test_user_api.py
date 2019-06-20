@@ -101,31 +101,31 @@ class TestPublicUser:
 
 
 @pytest.mark.django_db
-class PrivateUserApiTests():
+class TestPrivateUserApi():
     """Test API requests that require authentication"""
 
-    def setup_method(self, registred_user):
-        self.clinent = APIClient()
-        self.client.force_authenticate(user=registred_user)
-
-    def test_retrive_profile_success(self, registred_user):
+    def test_retrive_profile_success(self, new_user, logged_client):
         """Test retrieving profile for logged in user"""
-        response = self.client.get(ME_URL)
+        # self.client.force_authenticate(registred_user)
+        response = logged_client.get(ME_URL)
 
         assert response.status_code == status.HTTP_200_OK
-        assert response.data == {'email': registred_user.email}
+        assert response.data == {
+            'email': new_user['email'],
+            'name': new_user['email']
+        }
 
-    def test_post_me_not_allowed(self):
+    def test_post_me_not_allowed(self, logged_client):
         """Test that POST is not allowed on the me url"""
-        response = self.client.post(ME_URL, {})
+        response = logged_client.post(ME_URL, {})
 
         assert response.status_code == status.HTTP_405_METHOD_NOT_ALLOWED
 
-    def test_update_user_profile(self):
+    def test_update_user_profile(self, registred_user, logged_client):
         """Test updating the user profile for authenticated user"""
         payload = {'name': 'new name', 'password': 'newpass123'}
 
-        response = self.client.patch(ME_URL, payload)
+        response = logged_client.patch(ME_URL, payload)
         user = get_user_model().objects.all()[0]
 
         assert user.name == payload['name']

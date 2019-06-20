@@ -2,7 +2,6 @@ import os
 import django
 from django.conf import settings
 from django.contrib.auth import get_user_model
-# from rest_framework.test import APIClient
 import pytest
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'app.settings')
@@ -27,6 +26,7 @@ def new_user():
 def registred_user(new_user):
     user = get_user_model().objects.create_user(
         email=new_user["email"],
+        name=new_user["email"],
         password=new_user["password"]
     )
     return user
@@ -42,8 +42,9 @@ def admin_user(new_user):
     return user
 
 
-# @pytest.fixture
-# def api_client():
-#     os.environ.get('DJANGO_SETTINGS_MODULE')
-#     skip_if_no_django()
-#     return APIClient()
+@pytest.fixture
+def logged_client(registred_user):
+    from rest_framework.test import APIClient
+    client = APIClient()
+    client.force_authenticate(registred_user)
+    return client
