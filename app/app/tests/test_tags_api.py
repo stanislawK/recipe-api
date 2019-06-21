@@ -62,3 +62,23 @@ class TestPrivateTagsApi():
         assert response.status_code == status.HTTP_200_OK
         assert len(response.data) == 1
         assert response.data[0]['name'] == 'Thai'
+
+    def test_create_tag_succesful(self, logged_client, registred_user):
+        """Tast creating a new tag"""
+        payload = {'name': 'Test tag'}
+        response = logged_client.post(TAGS_URL, payload)
+
+        exists = Tag.objects.filter(
+            user=registred_user,
+            name=payload['name']
+        ).exists()
+
+        assert response.status_code == status.HTTP_201_CREATED
+        assert exists
+
+    def test_create_tag_invalid(self, logged_client):
+        """Test creating a new tag with invalid payload"""
+        payload = {'name': ''}
+        response = logged_client.post(TAGS_URL, payload)
+
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
