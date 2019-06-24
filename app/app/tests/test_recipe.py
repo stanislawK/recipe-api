@@ -158,3 +158,40 @@ class TestPrivateRecipeApi():
         assert ingredients.count() == 2
         assert ingredient1 in ingredients
         assert ingredient2 in ingredients
+
+    def test_partial_update_recipe(self, logged_client, registred_user):
+        """Test updating recipe with patch"""
+        recipe = sample_recipe(user=registred_user)
+        recipe.tags.add(sample_tag(user=registred_user))
+        new_tag = sample_tag(user=registred_user, name='Curry')
+
+        payload = {'title': 'Chicken tikka', 'tags': [new_tag.id]}
+        url = detail_url(recipe.id)
+        logged_client.patch(url, payload)
+
+        recipe.refresh_from_db()
+        assert recipe.title == payload['title']
+
+        tags = recipe.tags.all()
+        assert len(tags) == 1
+        assert new_tag in tags
+
+    def test_full_update_recipe(self, logged_client, registred_user):
+        """Test updating a recipe with put"""
+        recipe = sample_recipe(user=registred_user)
+        recipe.tags.add(sample_tag(user=registred_user))
+        payload = {
+            'title': 'Spaghetti carbonara',
+            'time_minutes': 25,
+            'price': 5.00
+        }
+        url = detail_url(recipe.id)
+        logged_client.put(url, payload)
+
+        recipe.refresh_from_db()
+        assert recipe.title == payload['title']
+        assert recipe.time_minutes == payload['time_minutes']
+        assert recipe.price == payload['price']
+
+        tags = recipe.tags.all()
+        assert len(tags) == 0
