@@ -6,7 +6,7 @@ from rest_framework.test import APIClient
 
 import pytest
 
-from core.models import Tag
+from core.models import Tag, Recipe
 
 from recipe.serializers import TagSerializer
 
@@ -82,3 +82,49 @@ class TestPrivateTagsApi():
         response = logged_client.post(TAGS_URL, payload)
 
         assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+    def test_retrive_tags_assigned_to_recipes(
+        self,
+        registred_user,
+        logged_client
+    ):
+        """Test filtering tags by those assigned to recipes"""
+        tag1 = Tag.objects.create(user=registred_user, name='Breakfast')
+        tag2 = Tag.objects.create(user=registred_user, name='Lunch')
+        recipe = Recipe.objects.create(
+            title='Coriander eggs on toast',
+            time_minutes=10,
+            price=5,
+            user=registred_user
+        )
+        recipe.tags.add(tag1)
+
+        response = logged_client.get(TAGS_URL, {'assigned_only': 1})
+
+        serializer1 = TagSerializer(tag1)
+        serializer2 = TagSerializer(tag2)
+        assert serializer1.data in response.data
+        assert serializer2.data not in response.data
+
+    def test_retrive_tags_assigned_unique(self, registred_user, logged_client):
+        """Test filtering tags by assigned returns unique items"""
+        tag1 = Tag.objects.create(user=registred_user, name='Breakfast')
+        Tag.objects.create(user=registred_user, name='Lunch')
+        recipe1 = Recipe.objects.create(
+            title='Pancakes',
+            time_minutes=10,
+            price=7.00,
+            user=registred_user
+        )
+        recipe1.tags.add(tag1)
+        recipe2 = Recipe.objects.create(
+            title='Porridge',
+            time_minutes=3,
+            price=2.00,
+            user=registred_user
+        )
+        recipe2.tags.add(tag1)
+
+        response = logged_client.get(TAGS_URL, {'assigned_only': 1})
+
+        assert len(response.data) == 1
